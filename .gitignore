@@ -1,0 +1,46 @@
+# Java
+*.class
+*.log
+
+# Maven
+target/
+!.mvn/wrapper/maven-wrapper.jar
+
+# Logs
+*.log
+
+# IntelliJ
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# Eclipse
+.project
+.classpath
+.settings/
+
+# VS Code
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+
+# Docker
+*.jar
+docker-compose.override.yml
+
+# Build artifacts
+*.war
+*.ear
+
+# Test reports
+surefire-reports/
+
+# Others
+node_modules/
