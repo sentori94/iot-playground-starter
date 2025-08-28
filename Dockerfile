@@ -8,7 +8,7 @@ RUN mvn -B -q -DskipTests dependency:go-offline
 
 # build
 COPY src ./src
-RUN mvn -B -q -DskipTests package
+RUN mvn -B -q -DskipTests package spring-boot:repackage
 
 # ---- Runtime stage ----
 FROM eclipse-temurin:21-jre
