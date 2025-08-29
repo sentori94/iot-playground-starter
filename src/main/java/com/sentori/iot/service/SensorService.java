@@ -1,7 +1,7 @@
-package com.example.iot.service;
+package com.sentori.iot.service;
 
-import com.example.iot.model.SensorData;
-import com.example.iot.repository.SensorDataRepository;
+import com.sentori.iot.model.SensorData;
+import com.sentori.iot.repository.SensorDataRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

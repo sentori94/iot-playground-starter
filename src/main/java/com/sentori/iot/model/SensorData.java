@@ -1,4 +1,4 @@
-package com.example.iot.model;
+package com.sentori.iot.model;
 
 
 import jakarta.persistence.Entity;

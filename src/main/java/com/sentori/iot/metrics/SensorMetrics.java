@@ -1,4 +1,4 @@
-package com.example.iot.metrics;
+package com.sentori.iot.metrics;
 
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;

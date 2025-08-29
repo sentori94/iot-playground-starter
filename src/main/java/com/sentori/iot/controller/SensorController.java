@@ -1,10 +1,9 @@
-package com.example.iot.controller;
+package com.sentori.iot.controller;
 
-import com.example.iot.metrics.SensorMetrics;
-import com.example.iot.model.SensorData;
-import com.example.iot.service.SensorService;
+import com.sentori.iot.metrics.SensorMetrics;
+import com.sentori.iot.model.SensorData;
+import com.sentori.iot.service.SensorService;
 import io.micrometer.core.instrument.Counter;
-import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.web.bind.annotation.*;
 
