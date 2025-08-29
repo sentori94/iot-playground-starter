@@ -5,6 +5,7 @@ import com.sentori.iot.model.SensorData;
 import com.sentori.iot.service.SensorService;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
+import org.slf4j.Logger;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -22,11 +23,15 @@ public class SensorController {
     // une variable toute bête dont la valeur sera exposée en Gauge
     private volatile double lastValue = Double.NaN; // garde la dernière valeur reçue
 
+    private static final Logger logger = org.slf4j.LoggerFactory.getLogger(SensorController.class);
+
+
     public SensorController(SensorService service, SensorMetrics metrics, MeterRegistry registry) {
         this.service = service;
         this.metrics = metrics;
         this.counter = registry.counter("sensor_data_ingested_total");
 
+        /*
         // --- Simulateur optionnel (si tu veux garder la génération auto) ---
         Thread simulator = new Thread(() -> {
             while (!Thread.currentThread().isInterrupted()) {
@@ -48,6 +53,7 @@ public class SensorController {
         });
         simulator.setDaemon(true);
         simulator.start();
+         */
     }
 
     // POST : ingestion de données manuelles

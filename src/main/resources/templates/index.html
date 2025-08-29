@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>IOT Playground</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+        <span class="navbar-brand">IOT Playground</span>
+    </div>
+</nav>
+
+<main class="container py-4">
+    <div th:if="${toast}" class="alert alert-info" th:text="${toast}"></div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title mb-3">Dashboard minimal</h5>
+            <div class="d-flex gap-2">
+                <a class="btn btn-primary" href="/simulate">Simuler un événement capteur</a>
+                <a class="btn btn-outline-secondary" href="/">Rafraîchir</a>
+            </div>
+
+            <hr/>
+            <p class="text-muted mb-1">Statut application</p>
+            <ul class="mb-0">
+                <li>Heure serveur : <span th:text="${#dates.format(#dates.createNow(),'yyyy-MM-dd HH:mm:ss')}">--</span></li>
+                <li>Env : <span th:text="${@environment.getProperty('spring.profiles.active','default')}">default</span></li>
+                <li>Niveau root log : <span th:text="${@environment.getProperty('logging.level.root','INFO')}">INFO</span></li>
+            </ul>
+        </div>
+    </div>
+</main>
+</body>
+</html>

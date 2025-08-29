@@ -4,6 +4,9 @@ spring:
     driver-class-name: org.h2.Driver
     username: admin
     password: walid94
+  thymeleaf:
+    cache: false
+    encoding: UTF-8
   jpa:
     hibernate:
       ddl-auto: update
@@ -27,3 +30,15 @@ management:
     export:
       prometheus:
         enabled: true
+
+logging:
+  level:
+    root: INFO
+    com.sentori.iot: DEBUG
+
+server:
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
