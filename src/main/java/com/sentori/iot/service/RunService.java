@@ -10,6 +10,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.time.OffsetDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -55,6 +56,34 @@ public class RunService {
 
         } catch (DataIntegrityViolationException e) {
             log.warn("Simulation request rejected (lock active): already RUNNING");
+            return null;
+        }
+    }
+
+    @Transactional
+    public RunEntity tryStartMany(List<String> sensorIds, int count, long intervalMs) {
+        Map<String,Object> paramsJson = new HashMap<>();
+        paramsJson.put("source", "ui");
+        paramsJson.put("sensorIds", sensorIds);
+        paramsJson.put("count", count);
+        paramsJson.put("intervalMs", intervalMs);
+
+        log.info("paramsJson : {}", paramsJson);
+
+        RunEntity r = new RunEntity();
+        r.setStatus("RUNNING");
+        r.setParams(paramsJson);
+
+        try {
+            RunEntity saved = repo.saveAndFlush(r);
+            log.info("Run created id={} status=RUNNING ({} sensors)", saved.getId(), sensorIds.size());
+
+            simulator.runManyRoundRobin(sensorIds, count, intervalMs) // <-- voir ci-dessous
+                    .whenComplete((v, ex) -> finishAsync(saved.getId(), ex));
+
+            return saved;
+        } catch (DataIntegrityViolationException e) {
+            log.warn("Run rejected: another RUNNING exists (DB lock).");
             return null;
         }
     }

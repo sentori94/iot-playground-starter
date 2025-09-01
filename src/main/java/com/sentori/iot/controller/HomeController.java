@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.List;
+
 @Controller
 public class HomeController {
     private static final Logger log = LoggerFactory.getLogger(HomeController.class);
@@ -31,21 +33,34 @@ public class HomeController {
 
     @PostMapping("/simulate")
     public String simulate(
-            @RequestParam(name = "sensorId", required = false) String sensorId,
+            @RequestParam(name = "sensorId", required = false) String sensorId, // (conserve si tu veux aussi un seul id)
+            @RequestParam(name = "sensorsCount", required = false, defaultValue = "1") int sensorsCount,
             @RequestParam(name = "count", defaultValue = "10") int count,
             @RequestParam(name = "intervalMs", defaultValue = "200") long intervalMs,
             Model model
     ) {
-        log.info("Simulation requested sensorId={} count={} intervalMs={}", sensorId, count, intervalMs);
+        // clamp 1..20
+        sensorsCount = Math.max(1, Math.min(20, sensorsCount));
 
-        var run = runService.tryStart(sensorId, count, intervalMs); // <-- on passe les inputs
+        // Génère les IDs (SENSOR-001 .. SENSOR-00N) si pas de sensorId explicite
+        List<String> sensorIds;
+        if (sensorId != null && !sensorId.isBlank()) {
+            sensorIds = List.of(sensorId.trim());
+        } else {
+            sensorIds = java.util.stream.IntStream.rangeClosed(1, sensorsCount)
+                    .mapToObj(i -> String.format("SENSOR-%03d", i))
+                    .toList();
+        }
+
+        log.info("Simulation requested sensorIds={} count={} intervalMs={}", sensorIds, count, intervalMs);
+
+        var run = runService.tryStartMany(sensorIds, count, intervalMs); // <-- nouvelle méthode
         if (run == null) {
             log.warn("Simulation request rejected (already RUNNING)");
             model.addAttribute("toast", "Un lancement est déjà en cours. Réessaie dans un instant.");
         } else {
-            log.info("Simulation started runId={} sensorId={} count={} intervalMs={}",
-                    run.getId(), sensorId, count, intervalMs);
-            model.addAttribute("toast", "Simulation lancée (run=" + run.getId() + ")");
+            log.info("Simulation started runId={} sensors={} count={} intervalMs={}", run.getId(), sensorIds.size(), count, intervalMs);
+            model.addAttribute("toast", "Simulation lancée (run=" + run.getId() + ", capteurs=" + sensorIds.size() + ")");
         }
         return index(model);
     }

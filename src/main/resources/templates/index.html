@@ -21,10 +21,10 @@
         <div class="card-body">
             <h5 class="card-title mb-3">Dashboard minimal</h5>
             <div class="d-flex gap-2">
-                <form class="row gy-2 gx-2 align-items-end" method="post" action="/simulate">
+                <form class="row gy-2 gx-2 align-items-end" method="post" action="/simulate" oninput="previewSensors()">
                     <div class="col-auto">
-                        <label class="form-label">Sensor ID (optionnel)</label>
-                        <input class="form-control" type="text" name="sensorId" placeholder="ex: SENS-001">
+                        <label class="form-label">Nombre de capteurs (1–20)</label>
+                        <input class="form-control" type="number" id="sensorsCount" name="sensorsCount" min="1" max="20" value="1" required>
                     </div>
                     <div class="col-auto">
                         <label class="form-label">Count</label>
@@ -41,6 +41,10 @@
                         <span class="badge bg-warning text-dark">Exécution en cours…</span>
                     </div>
                 </form>
+
+                <!-- Aperçu des IDs générés -->
+                <div id="sensorPreview" style="margin-top:8px; font-family:monospace;"></div>
+
                 <div id="progress-container" style="display:none; margin-top:20px;">
                     <div id="progress-bar" style="width:0%; height:25px; background-color:#4caf50; text-align:center; color:white;">
                         0%
@@ -60,31 +64,13 @@
 </main>
 </body>
 <script>
-    function startSimulation() {
-        document.getElementById("progress-container").style.display = "block";
-        let bar = document.getElementById("progress-bar");
-        let width = 0;
-        let interval = setInterval(() => {
-            if (width >= 90) { // On laisse 10% pour attendre la vraie fin
-                clearInterval(interval);
-            } else {
-                width++;
-                bar.style.width = width + "%";
-                bar.textContent = width + "%";
-            }
-        }, 100); // vitesse d'animation (100ms)
-    }
-
-    function finishSimulation() {
-        let bar = document.getElementById("progress-bar");
-        bar.style.width = "100%";
-        bar.textContent = "100%";
-        setTimeout(() => {
-            document.getElementById("progress-container").style.display = "none";
-            bar.style.width = "0%";
-            bar.textContent = "0%";
-        }, 500);
-    }
+    <script>
+      function previewSensors() {
+        const n = Math.max(1, Math.min(20, parseInt(document.getElementById('sensorsCount').value || '1', 10)));
+        const ids = Array.from({length:n}, (_,i) => `SENSOR-${String(i+1).padStart(3,'0')}`);
+        document.getElementById('sensorPreview').textContent = ids.join(', ');
+      }
+      previewSensors(); // init
 </script>
 
 </html>
