@@ -20,8 +20,23 @@
         <div class="card-body">
             <h5 class="card-title mb-3">Dashboard minimal</h5>
             <div class="d-flex gap-2">
-                <a class="btn btn-primary" href="/simulate">Simuler un événement capteur</a>
-                <a class="btn btn-outline-secondary" href="/">Rafraîchir</a>
+                <form class="row gy-2 gx-2 align-items-end" method="post" action="/simulate">
+                    <div class="col-auto">
+                        <label class="form-label">Sensor ID (optionnel)</label>
+                        <input class="form-control" type="text" name="sensorId" placeholder="ex: SENS-001">
+                    </div>
+                    <div class="col-auto">
+                        <label class="form-label">Count</label>
+                        <input class="form-control" type="number" name="count" value="10" min="1" max="1000">
+                    </div>
+                    <div class="col-auto">
+                        <label class="form-label">Interval (ms)</label>
+                        <input class="form-control" type="number" name="intervalMs" value="200" min="10">
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn btn-primary" type="submit">Lancer la simulation</button>
+                    </div>
+                </form>
             </div>
 
             <hr/>
