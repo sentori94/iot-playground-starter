@@ -13,6 +13,7 @@
     </div>
 </nav>
 
+
 <main class="container py-4">
     <div th:if="${toast}" class="alert alert-info" th:text="${toast}"></div>
 
@@ -34,9 +35,17 @@
                         <input class="form-control" type="number" name="intervalMs" value="200" min="10">
                     </div>
                     <div class="col-auto">
-                        <button class="btn btn-primary" type="submit">Lancer la simulation</button>
+                        <button class="btn btn-primary" type="submit" th:disabled="${running}">Lancer la simulation</button>
+                    </div>
+                    <div class="col-auto" th:if="${running}">
+                        <span class="badge bg-warning text-dark">Exécution en cours…</span>
                     </div>
                 </form>
+                <div id="progress-container" style="display:none; margin-top:20px;">
+                    <div id="progress-bar" style="width:0%; height:25px; background-color:#4caf50; text-align:center; color:white;">
+                        0%
+                    </div>
+                </div>
             </div>
 
             <hr/>
@@ -50,4 +59,34 @@
     </div>
 </main>
 </body>
+<script>
+    function startSimulation() {
+        document.getElementById("progress-container").style.display = "block";
+        let bar = document.getElementById("progress-bar");
+        let width = 0;
+        let interval = setInterval(() => {
+            if (width >= 90) { // On laisse 10% pour attendre la vraie fin
+                clearInterval(interval);
+            } else {
+                width++;
+                bar.style.width = width + "%";
+                bar.textContent = width + "%";
+            }
+        }, 100); // vitesse d'animation (100ms)
+    }
+
+    function finishSimulation() {
+        let bar = document.getElementById("progress-bar");
+        bar.style.width = "100%";
+        bar.textContent = "100%";
+        setTimeout(() => {
+            document.getElementById("progress-container").style.display = "none";
+            bar.style.width = "0%";
+            bar.textContent = "0%";
+        }, 500);
+    }
+</script>
+
 </html>
+
+

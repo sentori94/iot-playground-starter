@@ -13,7 +13,9 @@
         <java.version>17</java.version>
         <spring.boot.version>3.2.4</spring.boot.version>
         <micrometer.prometheus.version>1.12.3</micrometer.prometheus.version>
-        <h2.version>2.2.224</h2.version>
+        <flyway.version>11.11.2</flyway.version>
+        <flyway.pg.version>11.11.2</flyway.pg.version>
+        <postgresql.driver.version>42.7.7</postgresql.driver.version>
     </properties>
 
     <dependencies>
@@ -38,23 +40,40 @@
             <version>${spring.boot.version}</version>
             <scope>test</scope>
         </dependency>
+
         <!-- Data JPA (avec Hibernate et Jakarta) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
             <version>${spring.boot.version}</version>
         </dependency>
-        <!-- Base de données H2 (en mémoire) -->
-        <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-            <scope>runtime</scope>
-            <version>${h2.version}</version>
-        </dependency>
+
+        <!-- Thymleaf -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-thymeleaf</artifactId>
             <version>3.3.4</version>   <!-- par ex. -->
+        </dependency>
+
+        <!-- Driver JDBC -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>${postgresql.driver.version}</version>
+        </dependency>
+
+        <!-- Flyway runtime (auto-migrations au démarrage de Spring) -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+            <version>${flyway.version}</version>
+        </dependency>
+
+        <!-- Support PostgreSQL pour Flyway 10+ -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
+            <version>${flyway.pg.version}</version>
         </dependency>
     </dependencies>
 
