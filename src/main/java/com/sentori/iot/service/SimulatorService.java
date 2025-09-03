@@ -1,9 +1,12 @@
 package com.sentori.iot.service;
 
 import com.sentori.iot.model.SensorData;
+import com.sentori.iot.model.run.RunEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -31,38 +34,7 @@ public class SimulatorService {
         this.ingestPath = ingestPath;
     }
 
-    /** Lance l'envoi de 'count' mesures, espacées de intervalMs, pour sensorId. */
-    public CompletableFuture<Void> run(String sensorId, int count, long intervalMs) {
-        return CompletableFuture.runAsync(() -> {
-            log.info("Simulator start sensorId={} count={} intervalMs={}", sensorId, count, intervalMs);
-
-            for (int i = 0; i < count; i++) {
-                // ⚠ Adapte ces champs à ta structure réelle de SensorEntity et à ce que ton Controller attend.
-                SensorData payload = new SensorData();
-                payload.setSensorId(sensorId);                 // si ton entity a ce champ
-                payload.setType("temperature");
-                payload.setReading(randomDouble(0, 35, 2));               // idem
-                payload.setTimestamp(LocalDateTime.now());    // ou Instant / LocalDateTime selon ton modèle
-
-                restTemplate.postForEntity(baseUrl + ingestPath, payload, Void.class);
-                log.debug("Posted {}/{} to {}{}", i + 1, count, baseUrl, ingestPath);
-
-                if (intervalMs > 0) {
-                    try {
-                        Thread.sleep(intervalMs);
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                        throw new RuntimeException("Simulation interrupted", e);
-                    }
-                }
-            }
-
-            log.info("Simulator finished sensorId={} ({} events)", sensorId, count);
-        });
-    }
-
-
-    public CompletableFuture<Void> runManyRoundRobin(List<String> sensorIds, int count, long intervalMs) {
+    public CompletableFuture<Void> runManyRoundRobin(List<String> sensorIds, int count, long intervalMs, RunEntity run) {
         return CompletableFuture.runAsync(() -> {
             log.info("Simulator start sensors={} count={} intervalMs={}", sensorIds.size(), count, intervalMs);
 
@@ -74,7 +46,15 @@ public class SimulatorService {
                     payload.setReading(randomDouble(0, 35, 2));
                     payload.setTimestamp(LocalDateTime.now());
 
-                    restTemplate.postForEntity(baseUrl + ingestPath, payload, Void.class);
+
+                    HttpHeaders headers = new HttpHeaders();
+                    headers.set("X-User", run.getUsername());           // ex. tiré de params ou SecurityContext
+                    headers.set("X-Run-Id", run.getId().toString()); // fourni par RunService
+
+                    HttpEntity<SensorData> entity = new HttpEntity<>(payload, headers);
+                    restTemplate.postForEntity(baseUrl + ingestPath, entity, Void.class);
+
+                    //restTemplate.postForEntity(baseUrl + ingestPath, payload, Void.class);
                     log.debug("Posted k={}/{} sensorId={}", k + 1, count, sid);
                 }
                 if (intervalMs > 0) {

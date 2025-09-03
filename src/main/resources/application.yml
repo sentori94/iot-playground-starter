@@ -43,6 +43,16 @@ app:
   base-url: http://localhost:8080
   sensor:
     ingest-path: /sensors/data
+  grafana:
+    base-url: http://localhost:3000
+    # UID + slug de TON dashboard (ceux de ton exemple)
+    dashboard-path: /d/8ce481e7-1658-4a20-9d8e-ed54a564a5ae/sensors-temperature-par-capteur-user-run-new
+    org-id: 1
+    ds-prom-uid: dew0ddwep0p34d
+    timezone: browser
+    default-from: now-15m
+    default-to: now
+    default-refresh: 5s
 
 server:
   servlet:

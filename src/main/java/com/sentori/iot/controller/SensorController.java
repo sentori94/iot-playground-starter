@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Random;
 
 @RestController
 @RequestMapping("/sensors")
@@ -18,53 +17,48 @@ public class SensorController {
 
     private final SensorService service;
     private final SensorMetrics metrics;
-    private final Counter counter;
-    private final Random random = new Random();
+    private MeterRegistry registry;
     // une variable toute bête dont la valeur sera exposée en Gauge
     private volatile double lastValue = Double.NaN; // garde la dernière valeur reçue
 
     private static final Logger logger = org.slf4j.LoggerFactory.getLogger(SensorController.class);
 
+    /*
+    private final Counter globalIngest = Counter.builder("sensor_data_ingested_total")
+            .description("Nombre total de mesures ingérées")
+            .register(registry);
+
+     */
 
     public SensorController(SensorService service, SensorMetrics metrics, MeterRegistry registry) {
         this.service = service;
         this.metrics = metrics;
-        this.counter = registry.counter("sensor_data_ingested_total");
+        this.registry = registry;
 
-        /*
-        // --- Simulateur optionnel (si tu veux garder la génération auto) ---
-        Thread simulator = new Thread(() -> {
-            while (!Thread.currentThread().isInterrupted()) {
-                try {
-                    Thread.sleep(5000);
-                    SensorData simulated = new SensorData(
-                            "sensor-" + random.nextInt(3),
-                            "temperature",
-                            20 + random.nextDouble() * 10,
-                            LocalDateTime.now()
-                    );
-                    service.save(simulated);
-                    metrics.setTemperature(simulated.getSensorId(), simulated.getReading());
-                    counter.increment();
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-            }
-        });
-        simulator.setDaemon(true);
-        simulator.start();
-         */
+        //this.counter = registry.counter("sensor_data_ingested_total");
     }
 
     // POST : ingestion de données manuelles
     @PostMapping("/data")
-    public void ingest(@RequestBody SensorData sensorData) {
+    public void ingest(@RequestBody SensorData sensorData,
+                       @RequestHeader(value = "X-User", required = false) String user,
+                       @RequestHeader(value = "X-Run-Id", required = false) String runId) {
         sensorData.setTimestamp(LocalDateTime.now());
         service.save(sensorData);
 
         // Mise à jour de la métrique temps réel (courbe par capteur)
-        metrics.setTemperature(sensorData.getSensorId(), sensorData.getReading());
-        counter.increment();
+        metrics.setTemperature(sensorData.getSensorId(), sensorData.getReading(), user, runId);
+
+        // 1) Compteur global (facultatif)
+        //globalIngest.increment();
+
+        // 2) Compteur tagué (pour Grafana: user/run/sensor)
+        registry.counter(
+                "sensor_data_ingested_total",
+                "user", user,
+                "run", runId,
+                "sensor_id", sensorData.getSensorId()
+        ).increment();
     }
 
     // GET : récupération de toutes les données capteurs

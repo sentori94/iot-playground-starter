@@ -23,6 +23,10 @@
             <div class="d-flex gap-2">
                 <form class="row gy-2 gx-2 align-items-end" method="post" action="/simulate" oninput="previewSensors()">
                     <div class="col-auto">
+                        <label>Utilisateur</label>
+                        <input type="text" name="username" required minlength="3" maxlength="20" pattern="[A-Za-z0-9._-]{3,20}" title="3–20 caractères: lettres, chiffres, . _ -"/>
+                    </div>
+                    <div class="col-auto">
                         <label class="form-label">Nombre de capteurs (1–20)</label>
                         <input class="form-control" type="number" id="sensorsCount" name="sensorsCount" min="1" max="20" value="1" required>
                     </div>
@@ -35,9 +39,12 @@
                         <input class="form-control" type="number" name="intervalMs" value="200" min="10">
                     </div>
                     <div class="col-auto">
-                        <button class="btn btn-primary" type="submit" th:disabled="${running}">Lancer la simulation</button>
+                        <button id="launch-btn" class="btn btn-primary" type="submit" th:disabled="${running}">
+                            Lancer la simulation
+                        </button>
                     </div>
-                    <div class="col-auto" th:if="${running}">
+
+                    <div id="running-badge" class="col-auto" th:if="${running}">
                         <span class="badge bg-warning text-dark">Exécution en cours…</span>
                     </div>
                 </form>
@@ -45,12 +52,20 @@
                 <!-- Aperçu des IDs générés -->
                 <div id="sensorPreview" style="margin-top:8px; font-family:monospace;"></div>
 
-                <div id="progress-container" style="display:none; margin-top:20px;">
-                    <div id="progress-bar" style="width:0%; height:25px; background-color:#4caf50; text-align:center; color:white;">
-                        0%
-                    </div>
-                </div>
             </div>
+
+            <!-- Lien Grafana (masqué tant qu’inexistant) -->
+            <div id="grafana-link" style="display:none; margin-top:12px;">
+                <a id="grafana-url" href="#" target="_blank" rel="noopener">Ouvrir le dashboard Grafana</a>
+            </div>
+
+            <!-- Barre de progression simple -->
+            <div id="progress-container" style="display:none; margin-top:12px; width:100%; background:#eee; border-radius:6px;">
+                <div id="progress-bar" style="width:0%; height:20px; background:#4caf50; color:#fff; text-align:center; border-radius:6px;">0%</div>
+            </div>
+
+            <!-- Expose l'ID du run à JS -->
+            <div id="cfg" th:if="${runId != null}" th:attr="data-run-id=${runId}"></div>
 
             <hr/>
             <p class="text-muted mb-1">Statut application</p>
@@ -62,17 +77,91 @@
         </div>
     </div>
 </main>
-</body>
-<script>
-    <script>
-      function previewSensors() {
-        const n = Math.max(1, Math.min(20, parseInt(document.getElementById('sensorsCount').value || '1', 10)));
-        const ids = Array.from({length:n}, (_,i) => `SENSOR-${String(i+1).padStart(3,'0')}`);
-        document.getElementById('sensorPreview').textContent = ids.join(', ');
-      }
-      previewSensors(); // init
-</script>
 
+
+<script th:inline="javascript">
+    // URLs (résolues par Thymeleaf)
+    const RUNS_API = /*[[@{/api/runs/}]]*/ '/api/runs/';
+
+    // Récupère l'ID si présent (la page vient de lancer une simu)
+    const cfgEl = document.getElementById('cfg');
+    const currentId = cfgEl ? cfgEl.dataset.runId : null;
+
+    // -- UI helpers --
+    const barWrap = document.getElementById('progress-container');
+    const bar     = document.getElementById('progress-bar');
+    const linkBox = document.getElementById('grafana-link');
+    const linkA   = document.getElementById('grafana-url');
+
+    let animTimer = null, pollTimer = null, animWidth = 0;
+
+    function startProgress() {
+      barWrap.style.display = 'block';
+      animWidth = 0;
+      clearInterval(animTimer);
+      animTimer = setInterval(() => {
+        if (animWidth < 90) {
+          animWidth++;
+          bar.style.width = animWidth + '%';
+          bar.textContent = animWidth + '%';
+        }
+      }, 100);
+    }
+
+    function finishProgress() {
+      clearInterval(animTimer);
+      bar.style.width = '100%';
+      bar.textContent = '100%';
+      setTimeout(() => {
+        barWrap.style.display = 'none';
+        bar.style.width = '0%';
+        bar.textContent = '0%';
+      }, 600);
+    }
+
+  function unlockUI() {
+    const btn = document.getElementById('launch-btn');
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = 'Lancer la simulation';
+    }
+    const badge = document.getElementById('running-badge');
+    if (badge) badge.style.display = 'none'; // ou badge.classList.add('d-none') si Bootstrap
+  }
+
+    async function pollRun(runId) {
+      try {
+        const res = await fetch(RUNS_API + runId, { headers: { 'Accept': 'application/json' }});
+        if (!res.ok) return; // 404/500 -> on réessaie au tick suivant
+        const run = await res.json();
+
+        // Quand le run est terminé
+        if (run.status === 'SUCCESS' || run.status === 'FINISHED' || run.status === 'FAILED') {
+          clearInterval(pollTimer);
+          finishProgress();
+          unlockUI(); // << dégrise le bouton + cache le badge
+
+          if (run.grafanaUrl && (run.status === 'SUCCESS' || run.status === 'FINISHED')) {
+            linkA.href = run.grafanaUrl;
+            linkBox.style.display = 'block';
+          }
+        }
+
+      } catch (e) {
+        // silencieux, on retentera au tick suivant
+        console.debug('poll error', e);
+      }
+    }
+
+    // Auto-démarrage si on revient d'un lancement
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!currentId) return;               // rien à faire si pas de run à suivre
+      startProgress();                      // barre qui avance en attendant
+      pollTimer = setInterval(() => pollRun(currentId), 1000); // 1s
+      console.log('Polling run', currentId, 'via', RUNS_API);
+    });
+</script>
+</body>
 </html>
 
 

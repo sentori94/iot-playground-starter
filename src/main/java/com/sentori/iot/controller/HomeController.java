@@ -33,12 +33,17 @@ public class HomeController {
 
     @PostMapping("/simulate")
     public String simulate(
+            @RequestParam(name = "username") String username,
             @RequestParam(name = "sensorId", required = false) String sensorId, // (conserve si tu veux aussi un seul id)
             @RequestParam(name = "sensorsCount", required = false, defaultValue = "1") int sensorsCount,
             @RequestParam(name = "count", defaultValue = "10") int count,
             @RequestParam(name = "intervalMs", defaultValue = "200") long intervalMs,
             Model model
     ) {
+        if (username == null || !username.matches("[A-Za-z0-9._-]{3,20}")) {
+            model.addAttribute("toast", "Username invalide (3–20, lettres/chiffres . _ -)");
+            return index(model);
+        }
         // clamp 1..20
         sensorsCount = Math.max(1, Math.min(20, sensorsCount));
 
@@ -54,13 +59,16 @@ public class HomeController {
 
         log.info("Simulation requested sensorIds={} count={} intervalMs={}", sensorIds, count, intervalMs);
 
-        var run = runService.tryStartMany(sensorIds, count, intervalMs); // <-- nouvelle méthode
+        var run = runService.tryStartMany(username, sensorIds, count, intervalMs); // <-- nouvelle méthode
         if (run == null) {
             log.warn("Simulation request rejected (already RUNNING)");
-            model.addAttribute("toast", "Un lancement est déjà en cours. Réessaie dans un instant.");
+            model.addAttribute("toast", run == null
+                    ? "Un lancement est déjà en cours. Réessaie dans un instant."
+                    : "Simulation lancée (run=" + run.getId() + ", user=" + username + ")");
         } else {
             log.info("Simulation started runId={} sensors={} count={} intervalMs={}", run.getId(), sensorIds.size(), count, intervalMs);
             model.addAttribute("toast", "Simulation lancée (run=" + run.getId() + ", capteurs=" + sensorIds.size() + ")");
+            model.addAttribute("runId", run.getId().toString());
         }
         return index(model);
     }

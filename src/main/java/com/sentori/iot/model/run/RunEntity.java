@@ -12,11 +12,17 @@ import java.util.UUID;
 @Table(name="runs")
 public class RunEntity {
 
-    @Id private UUID id = UUID.randomUUID();
+    @Id
+    private UUID id = UUID.randomUUID();
 
-    @Column(nullable=false) private String status; // RUNNING,SUCCESS,FAILED,CANCELED
+    @Column(name = "username", length = 20, nullable = false)
+    private String username;
 
-    @Column(nullable=false) private OffsetDateTime startedAt = OffsetDateTime.now();
+    @Column(nullable=false)
+    private String status; // RUNNING,SUCCESS,FAILED,CANCELED
+
+    @Column(nullable=false)
+    private OffsetDateTime startedAt = OffsetDateTime.now();
 
     private OffsetDateTime finishedAt;
 
@@ -24,7 +30,11 @@ public class RunEntity {
     @Column(columnDefinition = "jsonb")
     private Map<String,Object> params;
 
-    @Column(columnDefinition="text") private String errorMessage;
+    @Column(columnDefinition="text")
+    private String errorMessage;
+
+    @Column(name = "grafana_url")
+    private String grafanaUrl;
 
     public UUID getId() {
         return id;
@@ -72,5 +82,22 @@ public class RunEntity {
 
     public void setErrorMessage(String errorMessage) {
         this.errorMessage = errorMessage;
+    }
+
+    public String getGrafanaUrl() {
+        return grafanaUrl;
+    }
+
+    public void setGrafanaUrl(String grafanaUrl) {
+        this.grafanaUrl = grafanaUrl;
+    }
+
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 }

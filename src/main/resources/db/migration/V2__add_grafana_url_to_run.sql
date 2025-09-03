@@ -1,0 +1,1 @@
+ALTER TABLE runs ADD COLUMN grafana_url TEXT;  -- nullable, taille illimitée
