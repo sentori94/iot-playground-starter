@@ -1,13 +1,12 @@
 # Java
 *.class
 *.log
+logs/
 
 # Maven
 target/
 !.mvn/wrapper/maven-wrapper.jar
 
-# Logs
-*.log
 
 # IntelliJ
 .idea/

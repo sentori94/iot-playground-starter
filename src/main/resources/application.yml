@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:postgresql://iotsensorsdb.czsa8wkgcnmg.eu-west-3.rds.amazonaws.com:5432/postgres?sslmode=require
+    url: jdbc:postgresql://iot-sensors-db.czsa8wkgcnmg.eu-west-3.rds.amazonaws.com:5432/postgres?sslmode=require
     driver-class-name: org.postgresql.Driver
     username: postgres
     password: Eyeshield21
