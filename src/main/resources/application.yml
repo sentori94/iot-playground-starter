@@ -1,9 +1,9 @@
 spring:
   datasource:
-    url: jdbc:postgresql://iot-sensors-db.czsa8wkgcnmg.eu-west-3.rds.amazonaws.com:5432/postgres?sslmode=require
+    url: ${spring.datasource.url}
+    username: ${spring.datasource.username}
+    password: ${spring.datasource.password}
     driver-class-name: org.postgresql.Driver
-    username: postgres
-    password: Eyeshield21
     hikari:
       maximum-pool-size: 5
       minimum-idle: 1

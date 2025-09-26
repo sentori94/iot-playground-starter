@@ -73,6 +73,12 @@
                 <li>Heure serveur : <span th:text="${#dates.format(#dates.createNow(),'yyyy-MM-dd HH:mm:ss')}">--</span></li>
                 <li>Env : <span th:text="${@environment.getProperty('spring.profiles.active','default')}">default</span></li>
                 <li>Niveau root log : <span th:text="${@environment.getProperty('logging.level.root','INFO')}">INFO</span></li>
+                <li>IP serveur :
+                    <span th:text="${@serverInfo.ip}">127.0.0.1</span>
+                </li>
+                <li>DNS serveur :
+                    <span th:text="${@serverInfo.hostname}">localhost</span>
+                </li>
             </ul>
         </div>
     </div>
