@@ -46,7 +46,8 @@ app:
   grafana:
     base-url: http://localhost:3000
     # UID + slug de TON dashboard (ceux de ton exemple)
-    dashboard-path: /d/8ce481e7-1658-4a20-9d8e-ed54a564a5ae/sensors-temperature-par-capteur-user-run-new
+    dashboard-path: /d/sensors-temp-v2/sensors-temperature-par-capteur-user-run-v2
+
     org-id: 1
     ds-prom-uid: dew0ddwep0p34d
     timezone: browser
