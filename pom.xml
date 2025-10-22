@@ -16,6 +16,7 @@
         <flyway.version>11.11.2</flyway.version>
         <flyway.pg.version>11.11.2</flyway.pg.version>
         <postgresql.driver.version>42.7.7</postgresql.driver.version>
+        <lombok.version>1.18.30</lombok.version>
     </properties>
 
     <dependencies>
@@ -74,6 +75,14 @@
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-database-postgresql</artifactId>
             <version>${flyway.pg.version}</version>
+        </dependency>
+
+        <!-- Lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
