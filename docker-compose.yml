@@ -17,17 +17,39 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
       - GF_USERS_ALLOW_SIGN_UP=false
     volumes:
       - grafana-storage:/var/lib/grafana
+      - ./docker/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./docker/grafana/dashboards:/var/lib/grafana/dashboards:ro
     networks:
       - monitoring
     depends_on:
       - prometheus
+
+  postgres:
+    image: postgres:15
+    container_name: iot-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: iot_playground_local
+      POSTGRES_USER: iot_user
+      POSTGRES_PASSWORD: iot_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U iot_user -d iot_playground_local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 networks:
   monitoring:
 
 volumes:
   grafana-storage:
+  pgdata:
