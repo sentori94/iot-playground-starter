@@ -47,6 +47,19 @@ services:
       timeout: 5s
       retries: 5
 
+  xray-daemon:
+    image: amazon/aws-xray-daemon
+    container_name: xray-daemon
+    ports:
+      - "2000:2000/udp"
+    environment:
+      - AWS_ACCESS_KEY_ID=${XRAY_AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${XRAY_AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION:-eu-west-3}
+    command: -o
+    networks:
+      - monitoring
+
 networks:
   monitoring:
 

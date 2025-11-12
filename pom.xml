@@ -17,6 +17,7 @@
         <flyway.pg.version>11.11.2</flyway.pg.version>
         <postgresql.driver.version>42.7.7</postgresql.driver.version>
         <lombok.version>1.18.30</lombok.version>
+        <aws.xray.version>2.15.0</aws.xray.version>
     </properties>
 
     <dependencies>
@@ -83,6 +84,13 @@
             <artifactId>lombok</artifactId>
             <version>${lombok.version}</version>
             <scope>provided</scope>
+        </dependency>
+
+        <!-- AWS X-Ray SDK (core uniquement) -->
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-xray-recorder-sdk-core</artifactId>
+            <version>${aws.xray.version}</version>
         </dependency>
     </dependencies>
 

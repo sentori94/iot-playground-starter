@@ -39,6 +39,14 @@ logging:
     root: INFO
     com.sentori.iot: DEBUG
 
+# Configuration AWS X-Ray
+com:
+  amazonaws:
+    xray:
+      emitters:
+        daemon-address: ${AWS_XRAY_DAEMON_ADDRESS:127.0.0.1:2000}
+      context-missing: LOG_ERROR
+
 app:
   base-url: http://localhost:8080
   sensor:
