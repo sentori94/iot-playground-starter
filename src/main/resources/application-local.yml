@@ -1,6 +1,8 @@
 # Configuration pour le profil 'local' : identique à application.yml
 # sauf les propriétés de datasource qui pointent vers un Postgres local (Docker)
 spring:
+  application:
+    name: iot-playground
   datasource:
     url: jdbc:postgresql://localhost:5432/iot_playground_local
     username: iot_user
@@ -40,6 +42,8 @@ logging:
   level:
     root: INFO
     com.sentori.iot: DEBUG
+  file:
+    path: ./logs
 
 app:
   base-url: http://localhost:8080
@@ -64,3 +68,10 @@ server:
       enabled: true
       force: true
 
+# Configuration AWS X-Ray
+com:
+  amazonaws:
+    xray:
+      emitters:
+        daemon-address: ${AWS_XRAY_DAEMON_ADDRESS:127.0.0.1:2000}
+      context-missing: LOG_ERROR

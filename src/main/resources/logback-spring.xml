@@ -4,14 +4,20 @@
     <property name="LOG_DIR" value="${LOG_DIR:-./logs}"/>
     <property name="APP_NAME" value="${springAppName:-iot-playground}"/>
 
-    <!-- Encoder texte lisible -->
+    <!-- Console (toujours actif) -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Appenders fichiers -->
     <appender name="FILE_APP" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOG_DIR}/${APP_NAME}.log</file>
         <encoder>
             <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n</pattern>
         </encoder>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <!-- app.2025-08-29.0.log.gz, .1.log.gz, etc. -->
             <fileNamePattern>${LOG_DIR}/${APP_NAME}.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
             <maxFileSize>50MB</maxFileSize>
             <maxHistory>14</maxHistory>
@@ -20,7 +26,6 @@
         </rollingPolicy>
     </appender>
 
-    <!-- Optionnel : fichier dédié aux erreurs -->
     <appender name="FILE_ERR" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOG_DIR}/${APP_NAME}-error.log</file>
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
@@ -37,7 +42,7 @@
         </rollingPolicy>
     </appender>
 
-    <!-- Async pour ne pas bloquer les threads web -->
+    <!-- Async pour ne pas bloquer -->
     <appender name="ASYNC_FILE" class="ch.qos.logback.classic.AsyncAppender">
         <appender-ref ref="FILE_APP"/>
         <queueSize>8192</queueSize>
@@ -49,13 +54,6 @@
         <queueSize>1024</queueSize>
     </appender>
 
-    <!-- Console (pratique en dev / utile en conteneur) -->
-    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
-            <pattern>%d{HH:mm:ss.SSS} %-5level %logger{36} - %msg%n</pattern>
-        </encoder>
-    </appender>
-
     <!-- Root + niveaux -->
     <root level="INFO">
         <appender-ref ref="CONSOLE"/>
@@ -63,6 +61,6 @@
         <appender-ref ref="ASYNC_FILE_ERR"/>
     </root>
 
-    <!-- Exemple : votre package IoT en DEBUG -->
+    <!-- Package IoT en DEBUG -->
     <logger name="com.sentori.iot" level="DEBUG"/>
 </configuration>

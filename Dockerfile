@@ -16,6 +16,10 @@ WORKDIR /app
 
 # Créer un utilisateur non-root pour la sécurité
 RUN groupadd -r spring && useradd -r -g spring spring
+
+# Créer le dossier logs au cas où (avec permissions correctes)
+RUN mkdir -p /app/logs && chown spring:spring /app/logs
+
 USER spring:spring
 
 # Copier le JAR depuis le build stage
@@ -23,9 +27,8 @@ COPY --from=build /app/target/*-SNAPSHOT.jar /app/app.jar
 
 EXPOSE 8080
 
-# Variables d'environnement pour X-Ray (optionnelles)
-ENV AWS_XRAY_DAEMON_ADDRESS=127.0.0.1:2000
-ENV SPRING_PROFILES_ACTIVE=aws
+# Variables d'environnement pour X-Ray
+ENV AWS_XRAY_DAEMON_ADDRESS=xray-daemon:2000
 
 # Démarrage avec options JVM optimisées
 ENTRYPOINT ["java", \
