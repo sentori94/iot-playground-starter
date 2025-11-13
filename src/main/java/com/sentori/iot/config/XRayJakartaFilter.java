@@ -19,7 +19,14 @@ public class XRayJakartaFilter implements Filter {
             throws IOException, ServletException {
 
         HttpServletRequest httpReq = (HttpServletRequest) request;
-        String segmentName = httpReq.getMethod() + " " + httpReq.getRequestURI();
+        String path = httpReq.getRequestURI();
+        // Exclure explicitement Actuator pour éviter les segments inutiles
+        if (path.startsWith("/actuator")) {
+            chain.doFilter(request, response);
+            return;
+        }
+
+        String segmentName = httpReq.getMethod() + " " + path;
 
         Segment segment = null;
         try {
@@ -32,9 +39,18 @@ public class XRayJakartaFilter implements Filter {
             if (segment != null) {
                 segment.addException(e);
             }
-            throw e;
+            // Ne pas propager l'erreur X-Ray, juste log
+            if (!(e instanceof IOException) && !(e instanceof ServletException)) {
+                System.err.println("WARN: X-Ray tracing error for " + segmentName + ": " + e.getMessage());
+            } else {
+                throw e;
+            }
         } finally {
-            AWSXRay.endSegment();
+            try {
+                AWSXRay.endSegment();
+            } catch (Exception e) {
+                // Ignorer les erreurs de fin de segment
+            }
         }
     }
 
@@ -47,4 +63,3 @@ public class XRayJakartaFilter implements Filter {
         return requestInfo;
     }
 }
-
