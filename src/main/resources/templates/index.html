@@ -54,6 +54,13 @@
 
             </div>
 
+            <!-- Bouton pour télécharger les rapports -->
+            <div style="margin-top:12px;">
+                <button id="download-reports-btn" class="btn btn-success" onclick="downloadReports()">
+                    📥 Télécharger les rapports (ZIP)
+                </button>
+            </div>
+
             <!-- Lien Grafana (masqué tant qu’inexistant) -->
             <div id="grafana-link" style="display:none; margin-top:12px;">
                 <a id="grafana-url" href="#" target="_blank" rel="noopener">Ouvrir le dashboard Grafana</a>
@@ -166,8 +173,41 @@
       pollTimer = setInterval(() => pollRun(currentId), 1000); // 1s
       console.log('Polling run', currentId, 'via', RUNS_API);
     });
+
+    // Fonction pour télécharger les rapports
+    async function downloadReports() {
+      const btn = document.getElementById('download-reports-btn');
+      const originalText = btn.textContent;
+
+      try {
+        btn.disabled = true;
+        btn.textContent = '⏳ Téléchargement...';
+
+        const response = await fetch('/api/reports/download');
+
+        if (!response.ok) {
+          throw new Error('Erreur lors du téléchargement: ' + response.status);
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'simulation-reports.zip';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        console.log('Rapports téléchargés avec succès');
+      } catch (error) {
+        console.error('Erreur lors du téléchargement des rapports:', error);
+        alert('Erreur lors du téléchargement des rapports. Vérifiez la console pour plus de détails.');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
+      }
+    }
 </script>
 </body>
 </html>
-
-

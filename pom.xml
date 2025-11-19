@@ -92,6 +92,14 @@
             <artifactId>aws-xray-recorder-sdk-core</artifactId>
             <version>${aws.xray.version}</version>
         </dependency>
+
+        <!-- Dotenv pour charger le fichier .env (uniquement en local) -->
+        <dependency>
+            <groupId>io.github.cdimascio</groupId>
+            <artifactId>dotenv-java</artifactId>
+            <version>3.0.0</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
     <build>

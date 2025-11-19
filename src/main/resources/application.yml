@@ -67,6 +67,10 @@ app:
     default-to: now
     default-refresh: 5s
 
+  reports:
+    api-gateway-url: ${REPORTS_API_GATEWAY_URL:https://your-api-gateway-url.execute-api.region.amazonaws.com/prod/reports}
+    api-key: ${REPORTS_API_KEY:your-api-key-here}
+
 server:
   servlet:
     encoding:

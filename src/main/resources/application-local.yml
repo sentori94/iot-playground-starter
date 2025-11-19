@@ -60,6 +60,9 @@ app:
     default-from: now-15m
     default-to: now
     default-refresh: 5s
+  reports:
+    api-gateway-url: ${REPORTS_API_GATEWAY_URL}
+    api-key: ${REPORTS_API_KEY}
 
 server:
   servlet:
