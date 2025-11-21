@@ -18,6 +18,7 @@
         <postgresql.driver.version>42.7.7</postgresql.driver.version>
         <lombok.version>1.18.30</lombok.version>
         <aws.xray.version>2.15.0</aws.xray.version>
+        <h2.version>2.1.214</h2.version> <!-- Ajout de la version H2 -->
     </properties>
 
     <dependencies>
@@ -43,6 +44,14 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- AssertJ pour des assertions plus lisibles dans les tests -->
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <version>3.24.2</version>
+            <scope>test</scope>
+        </dependency>
+
         <!-- Data JPA (avec Hibernate et Jakarta) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -62,6 +71,14 @@
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <version>${postgresql.driver.version}</version>
+        </dependency>
+
+        <!-- H2 Database pour les tests -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>${h2.version}</version>
+            <scope>test</scope>
         </dependency>
 
         <!-- Flyway runtime (auto-migrations au démarrage de Spring) -->

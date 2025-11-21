@@ -1,0 +1,84 @@
+# Configuration pour les tests (profil 'test')
+# Utilise une base de données H2 en mémoire pour éviter les dépendances externes
+
+spring:
+  application:
+    name: iot-playground-test
+
+  # Base de données H2 en mémoire pour les tests
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  # Configuration JPA pour H2
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate.dialect: org.hibernate.dialect.H2Dialect
+      hibernate.format_sql: false
+    show-sql: false
+
+  # Flyway désactivé pour les tests (on utilise ddl-auto=create-drop)
+  flyway:
+    enabled: false
+
+  # Thymeleaf
+  thymeleaf:
+    cache: false
+    encoding: UTF-8
+
+# Actuator pour les tests
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# Logging minimal pour les tests
+logging:
+  level:
+    root: WARN
+    com.sentori.iot: INFO
+    org.springframework: WARN
+    org.hibernate: WARN
+
+# Configuration application pour les tests
+app:
+  base-url: http://localhost:8080
+  sensor:
+    ingest-path: /sensors/data
+  grafana:
+    base-url: http://localhost:3000
+    dashboard-path: /d/test/test-dashboard
+    org-id: 1
+    ds-prom-uid: test-prometheus-uid
+    timezone: browser
+    default-from: now-15m
+    default-to: now
+    default-refresh: 5s
+  report:
+    api-gateway-url: https://api.test.com/reports
+    api-key: test-api-key
+
+# Configuration AWS X-Ray désactivée pour les tests
+com:
+  amazonaws:
+    xray:
+      emitters:
+        daemon-address: 127.0.0.1:2000
+      context-missing: LOG_ERROR
+
+server:
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+

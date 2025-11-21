@@ -8,6 +8,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDateTime;
 
@@ -16,7 +17,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-class SensorControllerIT {
+@ActiveProfiles("test")
+class SensorControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -26,11 +28,15 @@ class SensorControllerIT {
 
     @Test
     void ingest_shouldReturn200() throws Exception {
+        // Given
         SensorData data = new SensorData("sensor-1", "temperature", 25.0, LocalDateTime.now());
 
+        // When/Then
         mockMvc.perform(post("/sensors/data")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(data)))
+                        .content(objectMapper.writeValueAsString(data))
+                        .header("X-User", "testuser")
+                        .header("X-Run-Id", "test-run-123"))
                 .andExpect(status().isOk());
     }
 

@@ -26,8 +26,8 @@ public class ReportController {
 
     private final RestTemplate restTemplate;
 
-    public ReportController() {
-        this.restTemplate = new RestTemplate();
+    public ReportController(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
     }
 
     @GetMapping("/download")
