@@ -58,12 +58,18 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         timeout-minutes: 5
-        continue-on-error: true
+
+      - name: Afficher le statut du Quality Gate
+        if: always()
+        run: |
+          echo "Quality Gate outcome: ${{ steps.quality_gate.outcome }}"
+          echo "Quality Gate status: ${{ steps.quality_gate.outputs.quality-gate-status }}"
 
       - name: Échec si Quality Gate KO
-        if: steps.quality_gate.outputs.quality_gate_status != 'PASSED' && steps.quality_gate.outcome == 'success'
+        if: steps.quality_gate.outcome == 'success' && steps.quality_gate.outputs.quality-gate-status != 'PASSED'
         run: |
-          echo "Quality Gate status: ${{ steps.quality_gate.outputs.quality_gate_status }}" && exit 1
+          echo "❌ Quality Gate a échoué avec le statut: ${{ steps.quality_gate.outputs.quality-gate-status }}"
+          exit 1
 
       - name: Upload rapports tests & couverture (artefact)
         if: always()
