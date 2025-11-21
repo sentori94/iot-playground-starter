@@ -8,15 +8,52 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # SonarQube a besoin de tout l'historique pour calculer correctement l'info de blame
 
       - uses: actions/setup-java@v4
         with:
-          distribution: temurin
-          java-version: '21'
-          cache: maven
+            distribution: temurin
+            java-version: '21'
+            cache: maven
 
-      - name: Build jar (skip tests pour aller vite la 1ère fois)
-        run: mvn -B -DskipTests package
+      # Build complet (tests + jacoco) pour alimenter Sonar
+      - name: Build avec tests (Jacoco)
+        run: mvn -B clean verify
+
+      # Scan SonarQube (Self-hosted ou SonarCloud suivant vos vars/secrets)
+      - name: SonarQube Scan
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          mvn -B sonar:sonar \
+            -Dsonar.projectKey=${{ vars.SONAR_PROJECT_KEY }} \
+            -Dsonar.host.url=${{ vars.SONAR_HOST_URL }} \
+            -Dsonar.login=$SONAR_TOKEN \
+            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
+
+      # Quality Gate (attend le traitement asynchrone côté Sonar)
+      - name: SonarQube Quality Gate
+        id: quality_gate
+        uses: sonarsource/sonarqube-quality-gate-action@v1.1.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+        timeout-minutes: 5
+
+      - name: Échec si Quality Gate KO
+        if: steps.quality_gate.outputs.quality_gate_status != 'PASSED'
+        run: |
+          echo "Quality Gate status: ${{ steps.quality_gate.outputs.quality_gate_status }}" && exit 1
+
+      - name: Upload rapports tests & couverture (artefact)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-and-coverage-reports
+          path: |
+            target/site/jacoco/*
+            target/surefire-reports/*
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -25,12 +62,10 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ vars.AWS_REGION }}
 
-
       - name: Login to ECR (explicit)
         run: |
           aws ecr get-login-password --region ${{ vars.AWS_REGION }} \
             | docker login --username AWS --password-stdin ${{ vars.AWS_ACCOUNT_ID }}.dkr.ecr.${{ vars.AWS_REGION }}.amazonaws.com
-
 
       - name: Build & push Docker image (tag latest)
         run: |
