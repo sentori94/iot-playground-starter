@@ -2,6 +2,12 @@ name: Build & Push to ECR
 
 on:
   workflow_dispatch:
+    inputs:
+      run_sonar:
+        description: 'Exécuter analyse SonarQube'
+        required: false
+        type: boolean
+        default: true
 
 jobs:
   docker:
@@ -23,6 +29,7 @@ jobs:
 
       # Scan SonarQube (Self-hosted ou SonarCloud suivant vos vars/secrets)
       - name: SonarQube Scan
+        if: ${{ inputs.run_sonar }}
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
@@ -35,6 +42,7 @@ jobs:
 
       # Vérifier que le rapport a été généré
       - name: Vérifier rapport SonarQube
+        if: ${{ inputs.run_sonar }}
         run: |
           if [ -f "target/sonar/report-task.txt" ]; then
             echo "Rapport trouvé dans target/sonar/report-task.txt"
@@ -53,6 +61,7 @@ jobs:
 
       # Quality Gate (attend le traitement asynchrone côté Sonar)
       - name: SonarQube Quality Gate
+        if: ${{ inputs.run_sonar }}
         id: quality_gate
         uses: sonarsource/sonarqube-quality-gate-action@v1.1.0
         env:
@@ -60,13 +69,13 @@ jobs:
         timeout-minutes: 5
 
       - name: Afficher le statut du Quality Gate
-        if: always()
+        if: ${{ inputs.run_sonar && always() }}
         run: |
           echo "Quality Gate outcome: ${{ steps.quality_gate.outcome }}"
           echo "Quality Gate status: ${{ steps.quality_gate.outputs.quality-gate-status }}"
 
       - name: Échec si Quality Gate KO
-        if: steps.quality_gate.outcome == 'success' && steps.quality_gate.outputs.quality-gate-status != 'PASSED'
+        if: ${{ inputs.run_sonar && steps.quality_gate.outcome == 'success' && steps.quality_gate.outputs.quality-gate-status != 'PASSED' }}
         run: |
           echo "❌ Quality Gate a échoué avec le statut: ${{ steps.quality_gate.outputs.quality-gate-status }}"
           exit 1
