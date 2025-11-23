@@ -1,5 +1,6 @@
 package com.sentori.iot.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
@@ -12,6 +13,9 @@ import java.util.List;
 @Configuration
 public class CorsConfig {
 
+    @Value("${app.cors.allowed-origins}")
+    private String allowedOrigins;
+
     @Bean
     public CorsFilter corsFilter() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -20,11 +24,9 @@ public class CorsConfig {
         // Autoriser les credentials (cookies, headers d'authentification)
         config.setAllowCredentials(true);
 
-        // Origines autorisées (Angular en local)
-        config.setAllowedOrigins(Arrays.asList(
-                "http://localhost:4200",
-                "http://127.0.0.1:4200"
-        ));
+        // Origines autorisées (depuis configuration)
+        List<String> origins = Arrays.asList(allowedOrigins.split(","));
+        config.setAllowedOrigins(origins);
 
         // Headers autorisés
         config.setAllowedHeaders(Arrays.asList(
@@ -58,4 +60,3 @@ public class CorsConfig {
         return new CorsFilter(source);
     }
 }
-
