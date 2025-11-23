@@ -61,12 +61,18 @@ app:
     dashboard-path: /d/sensors-temp-v2/sensors-temperature-par-capteur-user-run-v2
     # Paramètres additionnels pour la génération d'URLs
     org-id: 1
-    ds-prom-uid: dew0ddwep0p34d
+    ds-prom-uid: prometheus
     timezone: browser
     default-from: now-15m
     default-to: now
     default-refresh: 5s
     default-time-range: 10m
+  run:
+    max-concurrent: 5
+    cleanup:
+      enabled: true
+      grace-period-minutes: 2
+      check-interval-ms: 120000 # 2 minutes (en millisecondes)
 
   reports:
     api-gateway-url: ${REPORTS_API_GATEWAY_URL:https://your-api-gateway-url.execute-api.region.amazonaws.com/prod/reports}

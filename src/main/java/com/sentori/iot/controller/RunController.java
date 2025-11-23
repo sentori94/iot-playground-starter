@@ -1,5 +1,6 @@
 package com.sentori.iot.controller;
 
+import com.sentori.iot.model.CanStartRunResponse;
 import com.sentori.iot.model.RunStartRequest;
 import com.sentori.iot.model.RunStartResponse;
 import com.sentori.iot.model.run.RunEntity;
@@ -32,6 +33,9 @@ public class RunController {
     private final RunRepository runRepository;
     private final GrafanaUrlBuilder grafanaUrlBuilder;
 
+    @Value("${app.run.max-concurrent:5}")
+    private int maxConcurrentRuns;
+
     public RunController(RunRepository runRepository, GrafanaUrlBuilder grafanaUrlBuilder) {
         this.runRepository = runRepository;
         this.grafanaUrlBuilder = grafanaUrlBuilder;
@@ -54,6 +58,47 @@ public class RunController {
     @GetMapping("/all")
     public List<RunEntity> all() {
         return runRepository.findAll(Sort.by(Sort.Direction.DESC, "startedAt"));
+    }
+
+    /**
+     * GET /api/runs/running - Récupère tous les runs avec le statut RUNNING
+     * Retourne la liste des simulations en cours, triée par date de démarrage (plus récent en premier)
+     */
+    @GetMapping("/running")
+    public List<RunEntity> getRunningRuns() {
+        List<RunEntity> runningRuns = runRepository.findAll().stream()
+                .filter(run -> "RUNNING".equals(run.getStatus()))
+                .sorted((r1, r2) -> r2.getStartedAt().compareTo(r1.getStartedAt())) // Plus récent en premier
+                .toList();
+
+        logger.debug("Récupération des runs en cours: {} trouvé(s)", runningRuns.size());
+
+        return runningRuns;
+    }
+
+    /**
+     * GET /api/runs/can-start - Vérifie si on peut démarrer une nouvelle simulation
+     * Retourne le nombre de runs en cours et si la limite est atteinte
+     * HTTP 200 OK si disponible, HTTP 503 Service Unavailable si limite atteinte
+     */
+    @GetMapping("/can-start")
+    public ResponseEntity<CanStartRunResponse> canStartRun() {
+        long runningCount = runRepository.findAll().stream()
+                .filter(run -> "RUNNING".equals(run.getStatus()))
+                .count();
+
+        boolean canStart = runningCount < maxConcurrentRuns;
+        long available = maxConcurrentRuns - runningCount;
+
+        logger.debug("Vérification démarrage simulation: {}/{} - canStart={}", runningCount, maxConcurrentRuns, canStart);
+
+        CanStartRunResponse response = new CanStartRunResponse(canStart, runningCount, maxConcurrentRuns, available);
+
+        if (canStart) {
+            return ResponseEntity.ok(response); // 200 OK
+        } else {
+            return ResponseEntity.status(503).body(response); // 503 Service Unavailable
+        }
     }
 
     /**
@@ -201,4 +246,5 @@ public class RunController {
 
         return ResponseEntity.ok(savedRun);
     }
+
 }
