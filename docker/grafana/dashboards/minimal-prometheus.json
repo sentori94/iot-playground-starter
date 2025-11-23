@@ -23,6 +23,7 @@
   "panels": [
     {
       "datasource": {
+
         "type": "prometheus",
         "uid": "${DS_PROM}"
       },

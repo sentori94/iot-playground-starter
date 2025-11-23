@@ -2,13 +2,13 @@ package com.sentori.iot.service;
 
 import com.sentori.iot.model.run.RunEntity;
 import com.sentori.iot.repository.RunRepository;
+import com.sentori.iot.util.GrafanaUrlBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.time.OffsetDateTime;
 import java.util.HashMap;
@@ -21,21 +21,13 @@ public class RunService {
     private static final Logger log = LoggerFactory.getLogger(RunService.class);
     private final RunRepository repo;
     private final SimulatorService simulator;
+    private final GrafanaUrlBuilder grafanaUrlBuilder;
     private final String baseUrl = "http://localhost:8080"; // ou @Value si tu veux
 
-
-    private @Value("${app.grafana.base-url}")        String gfBase;
-    private @Value("${app.grafana.dashboard-path}")  String gfPath;
-    private @Value("${app.grafana.org-id}")          String gfOrgId;
-    private @Value("${app.grafana.ds-prom-uid}")     String gfDsPromUid;
-    private @Value("${app.grafana.timezone}")        String gfTimezone;
-    private @Value("${app.grafana.default-from}")    String gfDefaultFrom;   // ex: now-15m
-    private @Value("${app.grafana.default-to}")      String gfDefaultTo;     // ex: now
-    private @Value("${app.grafana.default-refresh}") String gfRefresh;       // ex: 5s
-
-    public RunService(RunRepository repo, SimulatorService simulator) {
+    public RunService(RunRepository repo, SimulatorService simulator, GrafanaUrlBuilder grafanaUrlBuilder) {
         this.repo = repo;
         this.simulator = simulator;
+        this.grafanaUrlBuilder = grafanaUrlBuilder;
     }
 
     @Transactional
@@ -79,33 +71,13 @@ public class RunService {
                 run.setErrorMessage(ex.toString());
                 log.error("Run {} FAILED: {}", id, ex.toString());
             }
-            run.setGrafanaUrl(buildGrafanaUrlRelative(run));
-            log.debug("Grafana URL: " + run.getGrafanaUrl());
+
+            // Utilisation de GrafanaUrlBuilder
+            String grafanaUrl = grafanaUrlBuilder.buildUrl(id.toString(), run.getUsername());
+            run.setGrafanaUrl(grafanaUrl);
+            log.debug("Grafana URL: " + grafanaUrl);
+
             repo.save(run);
         });
-    }
-
-    private String buildGrafanaUrlRelative(RunEntity run) {
-        // username prioritaire : colonne, sinon params.user
-        String user = run.getUsername();
-        if ((user == null || user.isBlank()) && run.getParams() != null) {
-            Object u = run.getParams().get("user");
-            if (u != null) user = String.valueOf(u);
-        }
-        if (user == null || user.isBlank()) user = "anonymous";
-
-        return UriComponentsBuilder.fromHttpUrl(gfBase)
-                .path(gfPath)
-                .queryParam("orgId", gfOrgId)
-                .queryParam("from", gfDefaultFrom)
-                .queryParam("to", gfDefaultTo)
-                .queryParam("timezone", gfTimezone)
-                .queryParam("var-DS_PROM", gfDsPromUid)
-                .queryParam("var-user", user)
-                .queryParam("var-run", run.getId().toString())
-                .queryParam("var-sensor", "$__all")   // identique à ton lien
-                .queryParam("refresh", gfRefresh)
-                .build(true) // garde les $ et autres intactes
-                .toUriString();
     }
 }
