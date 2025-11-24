@@ -59,12 +59,14 @@
             <version>${spring.boot.version}</version>
         </dependency>
 
-        <!-- Thymleaf -->
+        <!-- Thymleaf - DÉSACTIVÉ -->
+        <!--
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-thymeleaf</artifactId>
-            <version>3.3.4</version>   <!-- par ex. -->
+            <version>3.3.4</version>
         </dependency>
+        -->
 
         <!-- Driver JDBC -->
         <dependency>

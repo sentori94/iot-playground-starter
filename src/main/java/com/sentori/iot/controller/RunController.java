@@ -27,7 +27,7 @@ import java.util.UUID;
 @RequestMapping("/api/runs")
 public class RunController {
 
-    private static final Logger logger = LoggerFactory.getLogger(RunController.class);
+    private static final Logger log = LoggerFactory.getLogger(RunController.class);
     private static final DateTimeFormatter RUN_ID_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
 
     private final RunRepository runRepository;
@@ -71,7 +71,7 @@ public class RunController {
                 .sorted((r1, r2) -> r2.getStartedAt().compareTo(r1.getStartedAt())) // Plus récent en premier
                 .toList();
 
-        logger.debug("Récupération des runs en cours: {} trouvé(s)", runningRuns.size());
+        log.debug("Running runs retrieved count={}", runningRuns.size());
 
         return runningRuns;
     }
@@ -90,7 +90,7 @@ public class RunController {
         boolean canStart = runningCount < maxConcurrentRuns;
         long available = maxConcurrentRuns - runningCount;
 
-        logger.debug("Vérification démarrage simulation: {}/{} - canStart={}", runningCount, maxConcurrentRuns, canStart);
+        log.debug("Can start check running={} max={} canStart={}", runningCount, maxConcurrentRuns, canStart);
 
         CanStartRunResponse response = new CanStartRunResponse(canStart, runningCount, maxConcurrentRuns, available);
 
@@ -113,8 +113,8 @@ public class RunController {
         // Génération d'un runId unique basé sur timestamp + user
         String runId = generateRunId(user);
 
-        logger.info("Démarrage de simulation (run) - runId: {}, user: {}, sensors: {}, duration: {}s, interval: {}s",
-                runId, user, request.getSensorIds(), request.getDuration(), request.getInterval());
+        log.info("Run start requested runId={} user={} sensors={} duration={}s interval={}s",
+                runId, user, request.getSensorIds().size(), request.getDuration(), request.getInterval());
 
         // Construction de l'URL Grafana avec filtres pré-appliqués
         String grafanaUrl = grafanaUrlBuilder.buildUrl(runId, user);
@@ -136,7 +136,7 @@ public class RunController {
 
         runRepository.save(runEntity);
 
-        logger.info("Run créé avec UUID: {} et runId: {}", runEntity.getId(), runId);
+        log.info("Run created id={} runId={} status=RUNNING", runEntity.getId(), runId);
 
         return new RunStartResponse(runId, grafanaUrl);
     }
@@ -156,7 +156,7 @@ public class RunController {
      */
     @PostMapping("/interrupt-all")
     public Map<String, Object> interruptAllRunningRuns() {
-        logger.info("Interruption de tous les runs en cours...");
+        log.info("Interrupt all running runs requested");
 
         // Récupérer tous les runs avec le statut RUNNING
         List<RunEntity> runningRuns = runRepository.findAll().stream()
@@ -164,7 +164,7 @@ public class RunController {
                 .toList();
 
         int count = runningRuns.size();
-        logger.info("Nombre de runs en RUNNING trouvés: {}", count);
+        log.info("Running runs found count={}", count);
 
         // Mettre à jour chaque run
         OffsetDateTime now = OffsetDateTime.now();
@@ -173,10 +173,10 @@ public class RunController {
             run.setFinishedAt(now);
             run.setErrorMessage("Simulation annulée manuellement");
             runRepository.save(run);
-            logger.debug("Run {} annulé (UUID: {})", run.getParams().get("runId"), run.getId());
+            log.debug("Run canceled id={} runId={}", run.getId(), run.getParams().get("runId"));
         }
 
-        logger.info("✅ {} runs annulés avec succès", count);
+        log.info("Runs interrupted count={}", count);
 
         // Retourner un résumé
         Map<String, Object> response = new HashMap<>();
@@ -198,7 +198,7 @@ public class RunController {
             @PathVariable("runId") String runId,
             @RequestBody Map<String, String> finishRequest) {
 
-        logger.info("Demande de finalisation du run: {}", runId);
+        log.info("Run finish requested runId={}", runId);
 
         // Chercher le run par runId dans les params
         List<RunEntity> matchingRuns = runRepository.findAll().stream()
@@ -210,7 +210,7 @@ public class RunController {
                 .toList();
 
         if (matchingRuns.isEmpty()) {
-            logger.warn("Run {} introuvable", runId);
+            log.warn("Run not found runId={}", runId);
             return ResponseEntity.notFound().build();
         }
 
@@ -218,14 +218,14 @@ public class RunController {
 
         // Vérifier que le run est bien en RUNNING
         if (!"RUNNING".equals(run.getStatus())) {
-            logger.warn("Le run {} n'est pas en RUNNING (statut actuel: {})", runId, run.getStatus());
+            log.warn("Run not in RUNNING state runId={} currentStatus={}", runId, run.getStatus());
             return ResponseEntity.badRequest().build();
         }
 
         // Récupérer le statut final demandé
         String finalStatus = finishRequest.getOrDefault("status", "SUCCESS");
         if (!finalStatus.equals("SUCCESS") && !finalStatus.equals("FAILED")) {
-            logger.warn("Statut invalide: {}. Doit être SUCCESS ou FAILED", finalStatus);
+            log.warn("Invalid status runId={} requestedStatus={}", runId, finalStatus);
             return ResponseEntity.badRequest().build();
         }
 
@@ -237,9 +237,9 @@ public class RunController {
         if ("FAILED".equals(finalStatus)) {
             String errorMessage = finishRequest.getOrDefault("errorMessage", "Simulation échouée");
             run.setErrorMessage(errorMessage);
-            logger.info("Run {} terminé avec statut FAILED: {}", runId, errorMessage);
+            log.error("Run {} FAILED runId={} error={}", run.getId(), runId, errorMessage);
         } else {
-            logger.info("Run {} terminé avec statut SUCCESS", runId);
+            log.info("Run {} finished SUCCESS runId={}", run.getId(), runId);
         }
 
         RunEntity savedRun = runRepository.save(run);
