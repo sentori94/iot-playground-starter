@@ -64,7 +64,7 @@ app:
     dashboard-path: /d/sensors-temp-v2/sensors-temperature-par-capteur-user-run-v2
     # Paramètres additionnels pour la génération d'URLs
     org-id: 1
-    ds-prom-uid: prometheus
+    ds-prom-uid: Prometheus
     timezone: browser
     default-from: now-15m
     default-to: now
